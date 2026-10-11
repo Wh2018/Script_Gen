@@ -3,7 +3,7 @@
 整合政策解析和剧本生成的完整流程
 """
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
 from datetime import datetime
 
 from ..parsers.policy_parser import PolicyParser
@@ -22,7 +22,8 @@ class ScriptGenerationWorkflow:
         self,
         input_files: List[str],
         output_dir: str = "output",
-        save_analysis: bool = True
+        save_analysis: bool = True,
+        duration: Optional[int] = None
     ) -> Dict:
         """
         运行完整的剧本生成工作流
@@ -31,10 +32,14 @@ class ScriptGenerationWorkflow:
             input_files: 输入文件路径列表
             output_dir: 输出目录
             save_analysis: 是否保存政策分析报告
+            duration: 指定剧本总时长（正整数秒）；None表示自动估算
 
         Returns:
             结果字典，包含生成的文件路径
         """
+        if duration is not None and (type(duration) is not int or duration <= 0):
+            raise ValueError("剧本时长必须为正整数（单位：秒）")
+
         # 创建输出目录
         output_path = Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
@@ -43,7 +48,9 @@ class ScriptGenerationWorkflow:
         policy_analysis = self.policy_parser.parse_policies(input_files)
 
         # 步骤2：剧本生成
-        script_data = self.script_generator.generate_script(policy_analysis)
+        script_data = self.script_generator.generate_script(
+            policy_analysis, duration=duration
+        )
 
         # 步骤3：输出文件
         print("\n" + "="*70)

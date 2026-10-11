@@ -12,6 +12,17 @@ sys.path.insert(0, str(Path(__file__).parent))
 from src.workflows.main_workflow import ScriptGenerationWorkflow
 
 
+def positive_duration(value: str) -> int:
+    """解析以秒为单位的正整数时长"""
+    try:
+        duration = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError('剧本时长必须为正整数（单位：秒）')
+    if duration <= 0:
+        raise argparse.ArgumentTypeError('剧本时长必须为正整数（单位：秒）')
+    return duration
+
+
 def parse_args():
     """解析命令行参数"""
     parser = argparse.ArgumentParser(
@@ -24,6 +35,7 @@ def parse_args():
   python main.py file1.md file2.txt                 # 使用多个文件
   python main.py -i ../Policy_input.md              # 使用 -i 指定输入
   python main.py -o results                         # 指定输出目录
+  python main.py policy.md --duration 60            # 指定剧本时长为60秒
   python main.py policy.md --no-analysis            # 不保存分析报告
         """
     )
@@ -45,6 +57,14 @@ def parse_args():
         '-o', '--output-dir',
         default='output',
         help='输出目录（默认: output）'
+    )
+
+    parser.add_argument(
+        '--duration',
+        type=positive_duration,
+        default=None,
+        metavar='SECONDS',
+        help='指定剧本总时长（正整数，单位：秒）；不指定时根据政策内容自动估算'
     )
 
     parser.add_argument(
@@ -82,6 +102,8 @@ def main():
     print()
     print(f"📥 输入文件: {', '.join(input_files)}")
     print(f"📤 输出目录: {OUTPUT_DIR}")
+    if args.duration is not None:
+        print(f"⏱ 指定剧本时长: {args.duration}秒")
     print()
 
     try:
@@ -92,7 +114,8 @@ def main():
         result = workflow.run(
             input_files=input_files,
             output_dir=OUTPUT_DIR,
-            save_analysis=SAVE_ANALYSIS
+            save_analysis=SAVE_ANALYSIS,
+            duration=args.duration
         )
 
         print("\n" + "="*70)

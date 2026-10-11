@@ -7,6 +7,7 @@
 - **政策语义解析**：深度理解政策文本，提取核心要点、政策主体/对象、措施等
 - **叙事框架设计**：自动设计适合短视频传播的叙事结构
 - **详细剧本生成**：生成包含角色、场景、镜头、对话的完整微短剧剧本
+- **可选剧本时长**：可指定总时长规划情节与分镜；不指定时根据政策内容自动估算
 - **支持多政策综合**：可同时处理多个政策文件，生成综合性剧本
 
 ## 系统要求
@@ -48,6 +49,7 @@ OPENAI_MODEL=deepseek-chat
 ./run.sh policy.md                 # 指定单个文件
 ./run.sh file1.md file2.md         # 指定多个文件
 ./run.sh -i policy.md -o results   # 使用参数
+./run.sh policy.md --duration 60   # 指定剧本总时长为60秒
 ```
 
 #### 方式二：直接运行Python
@@ -57,6 +59,7 @@ python main.py                                    # 使用默认输入 (../Polic
 python main.py policy.md                          # 单个文件
 python main.py file1.md file2.txt                 # 多个文件
 python main.py -i policy.md -o output_dir         # 使用参数
+python main.py policy.md --duration 120           # 指定剧本总时长为120秒
 python main.py policy.md --no-analysis            # 不保存分析报告
 ```
 
@@ -70,7 +73,22 @@ python main.py policy.md --no-analysis            # 不保存分析报告
   -h, --help            显示帮助信息
   -i, --input INPUT     输入文件（可多次使用）
   -o, --output-dir DIR  输出目录（默认: output）
+  --duration SECONDS   指定剧本总时长（正整数秒，默认: 自动估算）
   --no-analysis         不保存政策分析报告
+```
+
+`--duration` 为可选参数，单位为秒，例如 `--duration 60` 表示一分钟。指定后，
+叙事设计和详细分镜生成都会按此总时长规划，提示词要求场景时长合计、镜头时长合计
+与指定值一致，并根据时长安排台词和动作。未指定时沿用原有逻辑，根据政策内容
+自动估算时长（建议30-90秒）。
+
+通过Python调用工作流时，同样可传入 `duration`，省略或传入 `None` 表示自动估算：
+
+```python
+from src.workflows.main_workflow import ScriptGenerationWorkflow
+
+workflow = ScriptGenerationWorkflow()
+workflow.run(input_files=["policy.md"], duration=60)
 ```
 
 ## 输入文件格式
@@ -246,7 +264,8 @@ vLLM部署步骤：
 
 ### Q: 生成的剧本太长或太短怎么办？
 
-A: 系统会根据政策内容自动估算时长（目标30-60秒）。可以修改 `prompts/narrative_design.txt` 中的时长要求。
+A: 使用可选参数指定总时长，例如 `python main.py policy.md --duration 60`。
+不指定时，系统仍根据政策内容自动估算时长（建议30-90秒）。
 
 ### Q: 支持哪些文件编码？
 

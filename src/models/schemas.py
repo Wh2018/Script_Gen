@@ -44,7 +44,9 @@ class NarrativeFramework(BaseModel):
     emotional_tone: str = Field(description="情感基调（50-80字）")
     narrative_structure: NarrativeStructure = Field(description="叙事结构")
     policy_integration_strategy: str = Field(description="政策融入策略（100-150字）")
-    estimated_duration: int = Field(description="预估时长（秒，必须>=30）")
+    estimated_duration: int = Field(
+        description="预估时长（整数秒；指定时长时必须等于指定值，未指定时必须>=30）"
+    )
 
 
 # ===================== 剧本生成相关模型 =====================
@@ -90,5 +92,7 @@ class ScriptContent(BaseModel):
     """完整剧本内容"""
     title: str = Field(description="剧本题目（6-12字，贴近日常生活，符合微短剧命名风格，避免官方政策话术）")
     characters: List[Character] = Field(description="角色列表（2-4个）")
-    scenes: List[Scene] = Field(description="场景列表（2-5个）")
+    scenes: List[Scene] = Field(
+        description="场景列表（未指定时长时2-5个；指定时长时按实际时长调整）"
+    )
     shots: List[Shot] = Field(description="镜头列表")
